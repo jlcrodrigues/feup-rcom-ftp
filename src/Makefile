@@ -2,6 +2,7 @@ TARGET = download
 LIBS = -lm
 CC = gcc
 CFLAGS = -g -Wall
+ARG1 = ftp://ftp.up.pt/pub/
 
 .PHONY: default all clean
 
@@ -20,7 +21,7 @@ $(TARGET): $(OBJECTS)
 	$(CC) $(OBJECTS) -Wall $(LIBS) -o $@
 
 run: ${TARGET}
-	./${TARGET} ${ARGS}
+	./${TARGET} ${ARGS} ${ARG1}
 
 clean:
 	-rm -f *.o

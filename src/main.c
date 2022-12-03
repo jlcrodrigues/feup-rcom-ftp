@@ -1,17 +1,25 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <netdb.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 
 #include "utils.h"
 
-int main() {
+int main(int argc, char *argv[]) {
     Url url;
-    if (parseUrl("ftp://usr:pwd@ftp.up.pt/pub/", &url)) {
-        printf("The provided url is not valid.\n");
-        return 1;
+
+    if (argc < 2) {
+        printf("Usage:\n\t./download [file_path]\n");
+        exit(EXIT_FAILURE);
     }
-    printf("user - %s\n", url.user);
-    printf("password - %s\n", url.password);
-    printf("host - %s\n", url.host);
-    printf("path - %s\n", url.path);
+
+    if (parseUrl(argv[1], &url)) {
+        printf("The provided url is not valid.\n");
+        exit(EXIT_FAILURE);
+    }
+
+    int sockfd = openConnection(url);
+
     return 0;
 }
