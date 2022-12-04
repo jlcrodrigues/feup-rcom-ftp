@@ -96,4 +96,11 @@ int login(int sockfd, Url url);
  */
 int enterPassiveMode(int sockfd, char* address);
 
-void getFile(int sockfd, Url url);
+/**
+ * @brief Get the File from the data connection.
+ * 
+ * @param sockfd Control socket file descriptor.
+ * @param url Parsed url struct.
+ * @param datafd Data socket file descriptor.
+ */
+void getFile(int sockfd, Url url, int datafd);

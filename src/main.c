@@ -23,9 +23,14 @@ int main(int argc, char *argv[]) {
 
     login(sockfd, url);
 
-    getFile(sockfd, url);
+    char* address = (char *)(malloc(BUFFER_SIZE));
+    address[0] = '\0';
+    int port = enterPassiveMode(sockfd, address);
+    int datafd = openConnection(address, port);
+    getFile(sockfd, url, datafd);
 
     close(sockfd);
+    close(datafd);
 
     return 0;
 }

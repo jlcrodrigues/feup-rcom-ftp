@@ -9,7 +9,7 @@ int regGroupCopy(char* field, char* url_str, regmatch_t reg) {
 }
 
 int parseUrl(char* url_str, Url* url) {
-    const char *regex ="ftp://(([^/:].+):([^/:@].+)@)*([a-z.]+)/([a-z/]+)";
+    const char *regex ="ftp://(([^/:].+):([^/:@].+)@)*([a-z.]+)/([a-z/.]+)";
     url->user = malloc(BUFFER_SIZE);
     url->password = malloc(BUFFER_SIZE);
     url->host = malloc(BUFFER_SIZE);
@@ -178,8 +178,16 @@ int enterPassiveMode(int sockfd, char* address) {
     return portMSB * 256 + portLSB;
 }
 
-void getFile(int sockfd, Url url) {
-    char address[BUFFER_SIZE] = "\0";
-    int port = enterPassiveMode(sockfd, address);
-    int datafd = openConnection(address, port);
+void getFile(int sockfd, Url url, int datafd) {
+    char* buf = (char *)(malloc(BUFFER_SIZE));
+    const char retr[] = "retr ";
+
+    write(sockfd, retr, strlen(retr));
+    write(sockfd, url.path, strlen(url.path));
+    write(sockfd, "\n", 1);
+
+    FILE* file = fopen("file", "w");
+    while (getSocketLine(datafd, buf) != -1) {
+        fprintf(file, "%s", buf);
+    }
 }

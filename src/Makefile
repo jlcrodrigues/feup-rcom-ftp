@@ -2,7 +2,7 @@ TARGET = download
 LIBS = -lm
 CC = gcc
 CFLAGS = -g -Wall
-ARG1 = ftp://ftp.up.pt/pub/
+ARG1 = ftp://ftp.up.pt/pub/kodi/timestamp.txt
 
 .PHONY: default all clean
 
