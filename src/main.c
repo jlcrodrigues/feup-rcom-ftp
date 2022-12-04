@@ -21,5 +21,7 @@ int main(int argc, char *argv[]) {
 
     int sockfd = openConnection(url);
 
+    login(sockfd, url);
+
     return 0;
 }

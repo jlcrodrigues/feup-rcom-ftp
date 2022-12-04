@@ -31,7 +31,7 @@ int parseUrl(char* url_str, Url* url) {
         if (regGroupCopy(url->password, url_str, groups[3])) return 1;
     }
     else {
-        url->user = "";
+        url->user = "anonymous";
         url->password = "";
     }
     if (regGroupCopy(url->host, url_str, groups[4])) return 1;
@@ -71,5 +71,63 @@ int openConnection(Url url) {
         exit(EXIT_FAILURE);
     }
 
+    if (readCode(sockfd, "220") != 1) {
+        perror("Opening connection failed: wrong status code.\n");
+        exit(EXIT_FAILURE);
+    }
+
+    cleanSocket(sockfd);
+
     return sockfd;
+}
+
+
+int readCode(int sockfd, char* expected) {
+    FILE* socket = fdopen(sockfd, "r");
+    char* buf = malloc(BUFFER_SIZE);
+    size_t size = 0;
+    if (!(getline(&buf, &size, socket) >= 0)) 
+        return -1;
+    buf[3] = '\0';
+    int res = strcmp(buf, expected) == 0;
+    free(buf);
+    return res;
+}
+
+void cleanSocket(int sockfd) {
+    FILE* socket = fdopen(sockfd, "r");
+    char* buf = malloc(BUFFER_SIZE);
+    size_t size = 0;
+    while (getline(&buf, &size, socket) >= 0) {
+        // read is over when '-' is missing after the status code
+        if (buf[3] != '-') break;
+    }
+    free(buf);
+}
+
+int login(int sockfd, Url url) {
+    char* buf = (char *)(malloc(BUFFER_SIZE));
+    char* user = (char *)(malloc(BUFFER_SIZE));
+    char* pass = (char *)(malloc(BUFFER_SIZE));
+    sprintf(user, "user ");
+    strcat(user, url.user);
+    sprintf(pass, "pass ");
+    strcat(pass, url.password);
+
+    write(sockfd, user, strlen(user));
+    write(sockfd, "\n", 1);
+    if (readCode(sockfd, "331") == 0) {
+        perror("Username invalid.\n");
+        exit(EXIT_FAILURE);
+    }
+
+    write(sockfd, "pass \n", strlen("pass \n"));
+    write(sockfd, "\n", 1);
+    if (readCode(sockfd, "230") == 0) {
+        perror("Password invalid.\n");
+        exit(EXIT_FAILURE);
+    }
+
+    free(buf); free(user); free(pass);
+    return 0;
 }

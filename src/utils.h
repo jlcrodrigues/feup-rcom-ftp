@@ -42,6 +42,31 @@ int parseUrl(char* url_str, Url* url);
  * @brief Creates a socket and connects to the server specified in url.
  * 
  * @param url Url struct containing the url of the connection to be opened.
- * @return int Returns the socket file descriptor on success.
+ * @return int Returns the socket's file descriptor.
  */
 int openConnection(Url url);
+
+/**
+ * @brief Verify is the connection return the right code.
+ * 
+ * @param socket Socket file descriptor.
+ * @param expected Expected status code, e.g. "220".
+ * @return int 1 if the code is correct, -1 for error, and 0 otherwise
+ */
+int readCode(int sockfd, char* expected);
+
+/**
+ * @brief Read a socket until the end.
+ * 
+ * @param socket Socket file descriptor.
+ */
+void cleanSocket(int sockfd);
+
+/**
+ * @brief Login into the tcp connection.
+ * 
+ * @param sockfd 
+ * @param url Previously parsed url that contains the credentials (or not).
+ * @return int Returns 0 on success.
+ */
+int login(int sockfd, Url url);
