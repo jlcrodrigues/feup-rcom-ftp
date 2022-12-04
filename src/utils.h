@@ -41,10 +41,26 @@ int parseUrl(char* url_str, Url* url);
 /**
  * @brief Creates a socket and connects to the server specified in url.
  * 
+ * @return int Returns the socket's file descriptor.
+ */
+int openConnection(const char* address, int port);
+
+/**
+ * @brief Creates a connection to be used for control.
+ * 
  * @param url Url struct containing the url of the connection to be opened.
  * @return int Returns the socket's file descriptor.
  */
-int openConnection(Url url);
+int openControlConnection(Url url);
+
+/**
+ * @brief Read a line from a socket.
+ * 
+ * @param socket Socket file descriptor.
+ * @param buf Pointer to store the line read.
+ * @return Returns 0 upon success, -1 otherwise.
+ */
+int getSocketLine(int sockfd, char* line);
 
 /**
  * @brief Verify is the connection return the right code.
@@ -70,3 +86,14 @@ void cleanSocket(int sockfd);
  * @return int Returns 0 on success.
  */
 int login(int sockfd, Url url);
+
+/**
+ * @brief Enter passive mode.
+ * 
+ * @param sockfd Socket file descriptor.
+ * @param address String to be filled with the address given by the server.
+ * @return int Port number where server awaits connection.
+ */
+int enterPassiveMode(int sockfd, char* address);
+
+void getFile(int sockfd, Url url);

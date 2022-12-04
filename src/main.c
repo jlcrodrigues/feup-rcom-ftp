@@ -19,9 +19,13 @@ int main(int argc, char *argv[]) {
         exit(EXIT_FAILURE);
     }
 
-    int sockfd = openConnection(url);
+    int sockfd = openControlConnection(url);
 
     login(sockfd, url);
+
+    getFile(sockfd, url);
+
+    close(sockfd);
 
     return 0;
 }

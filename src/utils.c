@@ -40,23 +40,15 @@ int parseUrl(char* url_str, Url* url) {
     return 0;
 }
 
-int openConnection(Url url) {
+int openConnection(const char* address, int port) {
     int sockfd;
     struct sockaddr_in server_addr;
-    struct hostent *host;
-
-    if ((host = gethostbyname(url.host)) == NULL) {
-        perror("Retrieving host failed.\n");
-        exit(EXIT_FAILURE);
-    }
-
-    const char* address = inet_ntoa(*((struct in_addr *) host->h_addr));
 
     /*server address handling*/
     bzero((char *) &server_addr, sizeof(server_addr));
     server_addr.sin_family = AF_INET;
     server_addr.sin_addr.s_addr = inet_addr(address);    /*32 bit Internet address network byte ordered*/
-    server_addr.sin_port = htons(TCP_PORT);        /*server TCP port must be network byte ordered */
+    server_addr.sin_port = htons(port);        /*server TCP port must be network byte ordered */
 
     /*open a TCP socket*/
     if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
@@ -70,6 +62,20 @@ int openConnection(Url url) {
         perror("Opening connection failed.\n");
         exit(EXIT_FAILURE);
     }
+    return sockfd;
+}
+
+int openControlConnection(Url url) {
+    struct hostent *host;
+
+    if ((host = gethostbyname(url.host)) == NULL) {
+        perror("Retrieving host failed.\n");
+        exit(EXIT_FAILURE);
+    }
+
+    const char* address = inet_ntoa(*((struct in_addr *) host->h_addr));
+
+    int sockfd = openConnection(address, TCP_PORT);
 
     if (readCode(sockfd, "220") != 1) {
         perror("Opening connection failed: wrong status code.\n");
@@ -81,22 +87,33 @@ int openConnection(Url url) {
     return sockfd;
 }
 
+int getSocketLine(int sockfd, char* line) {
+    FILE* socket = fdopen(sockfd, "r");
+    char* buf = (char*)(malloc(BUFFER_SIZE));
+    size_t size = 0;
+    int nbytes;
+    if (!((nbytes = getline(&buf, &size, socket)) >= 0)) 
+        return -1;
+    memcpy(line, buf, nbytes);
+    free(buf);
+    return 0;
+}
 
 int readCode(int sockfd, char* expected) {
-    FILE* socket = fdopen(sockfd, "r");
-    char* buf = malloc(BUFFER_SIZE);
-    size_t size = 0;
-    if (!(getline(&buf, &size, socket) >= 0)) 
-        return -1;
+    char* buf = (char*)(malloc(BUFFER_SIZE));
+    if (getSocketLine(sockfd, buf) != 0) {
+        perror("Opening connection failed.\n");
+        exit(EXIT_FAILURE);
+    }
     buf[3] = '\0';
-    int res = strcmp(buf, expected) == 0;
+    int res = (strcmp(buf, expected) == 0);
     free(buf);
     return res;
 }
 
 void cleanSocket(int sockfd) {
     FILE* socket = fdopen(sockfd, "r");
-    char* buf = malloc(BUFFER_SIZE);
+    char* buf = (char*)(malloc(BUFFER_SIZE));
     size_t size = 0;
     while (getline(&buf, &size, socket) >= 0) {
         // read is over when '-' is missing after the status code
@@ -121,7 +138,7 @@ int login(int sockfd, Url url) {
         exit(EXIT_FAILURE);
     }
 
-    write(sockfd, "pass \n", strlen("pass \n"));
+    write(sockfd, pass, strlen(pass));
     write(sockfd, "\n", 1);
     if (readCode(sockfd, "230") == 0) {
         perror("Password invalid.\n");
@@ -130,4 +147,39 @@ int login(int sockfd, Url url) {
 
     free(buf); free(user); free(pass);
     return 0;
+}
+
+int enterPassiveMode(int sockfd, char* address) {
+    char* buf = (char *)(malloc(BUFFER_SIZE));
+    char* code = (char *)(malloc(BUFFER_SIZE));
+    const char* pasv = "pasv\n";
+    write(sockfd, pasv, strlen(pasv));
+    getSocketLine(sockfd, buf);
+    memcpy(code, buf, 3);
+    code[3] = '\0';
+    if (strcmp(code, "227") != 0) {
+        perror("Error entering passive mode.\n");
+        exit(EXIT_FAILURE);
+    }
+
+    // parse given address and port.
+    char *byte;
+    byte = strtok(buf, "(");
+    for (int i = 0; i < 4; i++) {
+        byte = strtok(NULL, ",");
+        strcat(address, byte);
+        if (i < 3) strcat(address, ".");
+    }
+    byte = strtok(NULL, ",");
+    int portMSB = atoi(byte);
+    byte = strtok(NULL, ",");
+    int portLSB = atoi(byte);
+
+    return portMSB * 256 + portLSB;
+}
+
+void getFile(int sockfd, Url url) {
+    char address[BUFFER_SIZE] = "\0";
+    int port = enterPassiveMode(sockfd, address);
+    int datafd = openConnection(address, port);
 }
