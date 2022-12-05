@@ -40,6 +40,10 @@ int parseUrl(char* url_str, Url* url) {
     return 0;
 }
 
+char* getFileName(char* path) {
+    char *name = strrchr(path, '/');
+    return name + 1;
+}
 
 int getSocketLine(int sockfd, char* line) {
     FILE* socket = fdopen(sockfd, "r");

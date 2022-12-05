@@ -46,6 +46,14 @@ int regGroupCopy(char* field, char* url_str, regmatch_t reg);
 int parseUrl(char* url_str, Url* url);
 
 /**
+ * @brief Get a file name from a file path.
+ * 
+ * @param path File path.
+ * @return char* File name.
+ */
+char* getFileName(char* path);
+
+/**
  * @brief Read a line from a socket.
  * 
  * @param socket Socket file descriptor.

@@ -113,7 +113,7 @@ void getFile(int sockfd, Url url, int datafd) {
     write(sockfd, url.path, strlen(url.path));
     write(sockfd, "\n", 1);
 
-    FILE* file = fopen("file", "w");
+    FILE* file = fopen(getFileName(url.path), "w");
     while (getSocketLine(datafd, buf) != -1) {
         fprintf(file, "%s", buf);
     }
