@@ -4,7 +4,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
-#include "utils.h"
+#include "connection.h"
 
 int main(int argc, char *argv[]) {
     Url url;
@@ -19,14 +19,17 @@ int main(int argc, char *argv[]) {
         exit(EXIT_FAILURE);
     }
 
+    // open a tcp connection at the given url
     int sockfd = openControlConnection(url);
 
     login(sockfd, url);
 
+    // create and connect to a tcp connection in passive mode
     char* address = (char *)(malloc(BUFFER_SIZE));
     address[0] = '\0';
     int port = enterPassiveMode(sockfd, address);
     int datafd = openConnection(address, port);
+
     getFile(sockfd, url, datafd);
 
     close(sockfd);
