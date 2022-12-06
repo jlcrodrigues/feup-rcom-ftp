@@ -22,13 +22,18 @@ int main(int argc, char *argv[]) {
     // open a tcp connection at the given url
     int sockfd = openControlConnection(url);
 
+    printf("Connection established: %s\n", url.host);
+
     login(sockfd, url);
+
+    printf("Logged in\n");
 
     // create and connect to a tcp connection in passive mode
     char* address = (char *)(malloc(BUFFER_SIZE));
     address[0] = '\0';
     int port = enterPassiveMode(sockfd, address);
     int datafd = openConnection(address, port);
+    printf("Connection established: %s:%d\n", address, port);
 
     getFile(sockfd, url, datafd);
 

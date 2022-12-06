@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <sys/socket.h>
 #include <unistd.h>
+#include <sys/ioctl.h>
 
 #define BUFFER_SIZE 256
 #define MAX_GROUPS 6

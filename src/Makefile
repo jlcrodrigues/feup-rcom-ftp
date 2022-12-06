@@ -3,6 +3,8 @@ LIBS = -lm
 CC = gcc
 CFLAGS = -g -Wall
 ARG1 = ftp://ftp.up.pt/pub/kodi/timestamp.txt
+ARG2 = ftp://rcom:rcom@netlab1.fe.up.pt/pipe.txt
+ARG3 = ftp://rcom:rcom@netlab1.fe.up.pt/files/crab.mp4
 
 .PHONY: default all clean
 

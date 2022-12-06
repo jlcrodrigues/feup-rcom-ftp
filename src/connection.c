@@ -33,6 +33,7 @@ int openControlConnection(Url url) {
         exit(EXIT_FAILURE);
     }
 
+
     const char* address = inet_ntoa(*((struct in_addr *) host->h_addr));
 
     int sockfd = openConnection(address, TCP_PORT);
@@ -106,15 +107,20 @@ int enterPassiveMode(int sockfd, char* address) {
 }
 
 void getFile(int sockfd, Url url, int datafd) {
-    char* buf = (char *)(malloc(BUFFER_SIZE));
+    int file, nbytes;
+    char* buf = (char *)(malloc(1024));
     const char retr[] = "retr ";
 
     write(sockfd, retr, strlen(retr));
     write(sockfd, url.path, strlen(url.path));
     write(sockfd, "\n", 1);
 
-    FILE* file = fopen(getFileName(url.path), "w");
-    while (getSocketLine(datafd, buf) != -1) {
-        fprintf(file, "%s", buf);
+    if ((file = open(getFileName(url.path), O_WRONLY | O_CREAT, 0777)) == -1) {
+        perror("Error creating the new file.\n");
+        exit(EXIT_FAILURE);
+    }
+
+    while ((nbytes = read(datafd, buf, 1024)) != 0) {
+        write(file, buf, nbytes);
     }
 }

@@ -9,7 +9,7 @@ int regGroupCopy(char* field, char* url_str, regmatch_t reg) {
 }
 
 int parseUrl(char* url_str, Url* url) {
-    const char *regex ="ftp://(([^/:].+):([^/:@].+)@)*([a-z.]+)/([a-z/.]+)";
+    const char *regex ="ftp://(([^/:].+):([^/:@].+)@)*([^/]+)/(.+)";
     url->user = malloc(BUFFER_SIZE);
     url->password = malloc(BUFFER_SIZE);
     url->host = malloc(BUFFER_SIZE);
@@ -42,12 +42,13 @@ int parseUrl(char* url_str, Url* url) {
 
 char* getFileName(char* path) {
     char *name = strrchr(path, '/');
+    if (name == NULL) return path;
     return name + 1;
 }
 
 int getSocketLine(int sockfd, char* line) {
     FILE* socket = fdopen(sockfd, "r");
-    char* buf = (char*)(malloc(BUFFER_SIZE));
+    char* buf;
     size_t size = 0;
     int nbytes;
     if (!((nbytes = getline(&buf, &size, socket)) >= 0)) 
@@ -70,10 +71,13 @@ int readCode(int sockfd, char* expected) {
 }
 
 void cleanSocket(int sockfd) {
+    int count;
+    ioctl(sockfd, FIONREAD, &count);
+    if (count <= 0) return;
     FILE* socket = fdopen(sockfd, "r");
     char* buf = (char*)(malloc(BUFFER_SIZE));
     size_t size = 0;
-    while (getline(&buf, &size, socket) >= 0) {
+    while (getline(&buf, &size, socket) > 0) {
         // read is over when '-' is missing after the status code
         if (buf[3] != '-') break;
     }
