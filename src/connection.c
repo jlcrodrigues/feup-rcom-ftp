@@ -57,21 +57,40 @@ int login(int sockfd, Url url) {
     sprintf(pass, "pass ");
     strcat(pass, url.password);
 
+    cleanSocket(sockfd);
+
     write(sockfd, user, strlen(user));
     write(sockfd, "\n", 1);
-    if (readCode(sockfd, "331") == 0) {
+
+    /* read login code */
+    char* code = (char*)(malloc(BUFFER_SIZE));
+    if (getSocketLine(sockfd, code) != 0) {
+        perror("Reading login failed.\n");
+        exit(EXIT_FAILURE);
+    }
+    code[3] = '\0';
+
+    if (strcmp(code, "331") != 0 && strcmp(code, "230") != 0) {
         perror("Username invalid.\n");
         exit(EXIT_FAILURE);
     }
-
-    write(sockfd, pass, strlen(pass));
-    write(sockfd, "\n", 1);
-    if (readCode(sockfd, "230") == 0) {
-        perror("Password invalid.\n");
-        exit(EXIT_FAILURE);
+    else if (strcmp(code, "331") == 0) {
+        write(sockfd, pass, strlen(pass));
+        write(sockfd, "\n", 1);
+        if (readCode(sockfd, "230") == 0) {
+            perror("Password invalid.\n");
+            exit(EXIT_FAILURE);
+        }
+    }
+    else if (strcmp(code, "230") == 0) {
+        cleanSocket(sockfd);
+        for (int i = 0; i < 1; i++)  {
+            getSocketLine(sockfd, buf);
+            if (strcmp(buf, "230 ") == 0) break;
+        }
     }
 
-    free(buf); free(user); free(pass);
+    free(buf); free(user); free(pass); free(code);
     return 0;
 }
 
@@ -80,6 +99,7 @@ int enterPassiveMode(int sockfd, char* address) {
     char* code = (char *)(malloc(BUFFER_SIZE));
 
     // write pasv command
+
     const char* pasv = "pasv\n";
     write(sockfd, pasv, strlen(pasv));
     getSocketLine(sockfd, buf);
