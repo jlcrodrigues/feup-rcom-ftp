@@ -24,7 +24,7 @@ $(TARGET): $(OBJECTS)
 	$(CC) $(OBJECTS) -Wall $(LIBS) -o $@
 
 run: ${TARGET}
-	./${TARGET} ${ARGS} ${ARG4}
+	./${TARGET} ${ARGS} ${ARG1}
 
 clean:
 	-rm -f *.o

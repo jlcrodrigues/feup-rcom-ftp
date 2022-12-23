@@ -84,10 +84,7 @@ int login(int sockfd, Url url) {
     }
     else if (strcmp(code, "230") == 0) {
         cleanSocket(sockfd);
-        for (int i = 0; i < 1; i++)  {
-            getSocketLine(sockfd, buf);
-            if (strcmp(buf, "230 ") == 0) break;
-        }
+        getSocketLine(sockfd, buf);
     }
 
     free(buf); free(user); free(pass); free(code);
